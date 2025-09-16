@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<title>Result Page</title>
+
+{% if query %}
+    <h1>Search result :{{query}}</h1>
+    {% if results %}
+        {% for result in results %}
+                <h2><a href={{result.url}}>{{result.title}}</a></h2>
+        {% endfor %}
+    {% else %}
+        <h2>No result founds</h2>
+    {% endif %}
+{% endif %}
+</html>
