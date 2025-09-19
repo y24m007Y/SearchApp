@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>検索テストページ</title>
+    </head>
+    <body>
+        <h1>単語や文章を使って文書の検索ができます</h1>
+        <form action="/search_page" method="post">
+            <input name="query"></input>
+            <button type="submit">検索</button>
+            <filedset>
+                <legend>検索方式</legend>
+                <div>
+                    <input type="radio" id="arg" name="argoritm" value="0">
+                    <label for="arg">キーワード検索</label>
+                    <input type="radio" id="arg" name="argoritm" value="1">
+                    <label for="arg">意味検索</label>
+                    <input type="radio" id="arg" name="argoritm" value="2">
+                    <label for="arg">キーワード+意味検索</label>
+                </div>
+            </filedset>
+        </form>
+    </body>
+</html>

@@ -4,7 +4,8 @@
 <title>Result Page</title>
 
 {% if query %}
-    <h1>Search result :{{query}}</h1>
+    <h1>Search result :{{query}}</h1> <br>
+    <a href={{url_for('search_page')}}>検索画面にもどる</a>
     {% if results %}
         {% for result in results %}
                 <h2><a href={{result.url}}>{{result.title}}</a></h2>
