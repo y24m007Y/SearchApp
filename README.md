@@ -4,7 +4,7 @@
 
 '''
 server.py {
-    from SearchApp import app
+    from webapp import app
     if __name__ == "main":
         app.run(dubug=True)
 }
