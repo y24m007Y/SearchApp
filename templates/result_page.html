@@ -1,17 +1,19 @@
-<!DOCTYPE html>
-<html lang="ja">
-
-<title>Result Page</title>
-
+{% extends "layout.html" %}
+{% block content %}
 {% if query %}
     <h1>Search result :{{query}}</h1> <br>
     <a href={{url_for('search_page')}}>検索画面にもどる</a>
     {% if results %}
         {% for result in results %}
-                <h2><a href={{result.url}}>{{result.title}}</a></h2>
+                <h3><a href={{result.url}}>{{result.title}}</a></h3>
+                <div class="tags">
+                    {% for tag in result.tags %}
+                    <div class="tag">{{tag}}</div>
+                    {% endfor %}
+                </div>
         {% endfor %}
     {% else %}
         <h2>No result founds</h2>
     {% endif %}
 {% endif %}
-</html>
+{% endblock %}

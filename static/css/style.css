@@ -1,0 +1,9 @@
+.tags {
+    display: flex;
+    width:auto;
+}
+
+.tag {
+    color:aquamarine;
+    width:auto;
+}

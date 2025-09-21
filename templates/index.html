@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <title>初期画面</title>
-    </head>
-    <body>
-        <a href="{{url_for('search_page')}}">検索画面に移動する</a>
-    </body>
-</html>
+{% extends "layout.html" %}
+{% block content %}
+    <a href="{{url_for('search_page')}}">検索画面に移動する</a>
+{% endblock %}
