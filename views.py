@@ -1,5 +1,5 @@
 from flask import render_template, url_for, request
-from webapp import app
+from SearchApp import app
 from Searcher import BM25, VecSearch, RankFusion, searcher
 
 @app.route('/')
