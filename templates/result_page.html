@@ -2,16 +2,15 @@
 {% block content %}
 {% if query %}
     <h1>Search result :{{query}}</h1> <br>
-    <a href={{url_for('search_page')}}>検索画面にもどる</a>
     {% if results %}
         {% for result in results %}
-                <h3><a href={{result.url}}>{{result.title}}</a></h3>
-                <div class="tags">
-                    {% for tag in result.tags %}
-                    <div class="tag">{{tag}}</div>
-                    {% endfor %}
-                </div>
-                <div class="space"></div>
+                <h3><a href={{result.url}} target="_blank">{{result.title}}</a></h3>
+                {% for tag in result.tags %}
+                <label class="checkbox-label">
+                    <input type="checkbox" name="tag" value="{{tag}}">
+                    {{ tag }}
+                </label>
+                {% endfor %}
         {% endfor %}
     {% else %}
         <h2>No result founds</h2>

@@ -4,6 +4,15 @@
         <form action="/search_page" method="post">
             <input name="query"></input>
             <button type="submit">検索</button>
+            <fieldset>
+                <legend>タグを追加して検索</legend>
+                {% for tag in tags %}
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="tag" value="{{tag}}">
+                        {{ tag }}
+                    </label>
+                {% endfor %}
+            </fieldset>
             <filedset>
                 <legend>検索方式</legend>
                 <div>
