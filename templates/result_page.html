@@ -7,11 +7,18 @@
                 <h3><a href={{result.url}} target="_blank">{{result.title}}</a></h3>
                 {% for tag in result.tags %}
                 <label class="checkbox-label">
-                    <input type="checkbox" name="tag" value="{{tag}}">
                     {{ tag }}
                 </label>
                 {% endfor %}
         {% endfor %}
+        <form>
+            {% for tag in taglist %}
+            <label class="checkbox-label">
+                <input type="checkbox" name="tag" value="{{tag}}" id="tag" class="tags">
+                {{ tag }}
+            </label>
+            {% endfor %}
+        </form>
     {% else %}
         <h2>No result founds</h2>
     {% endif %}

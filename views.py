@@ -1,14 +1,17 @@
-from flask import render_template, url_for, request
+from flask import render_template, url_for, request, redirect, session
 from SearchApp import app
 from QiitaSearch import BM25, VecSearch, RankFusion, search_dict
+import itertools
+
+app.secret_key = 'your_secret_key'
 
 @app.route('/')
 def create_app():
     return render_template('index.html')
 
-@app.route('/search_page', methods=['GET', 'POST'])
+@app.route('/search_page', methods=['POST', 'GET'])
 def search_page():
-    if request.method == "POST":
+    if request.method=="POST":
         query = request.form['query']
         argorithm = request.form['argoritm']
         tags = request.form.getlist('tag')
@@ -23,18 +26,35 @@ def search_page():
             return
         results = engin.search(query, tags)
         print(tags)
-        return render_template('/result_page.html', query=query, results=results, tags=tags)
+        session['query'] = query
+        session['results'] = results
+        return redirect(url_for('result_page'))
     else:
-        tagdb = search_dict.tagDB()
-        tagdb.connect_database()
-        top10_tags = tagdb.getTaglist(top_n=10, sorted=True)
-        tagdb.close_database()
-        del tagdb
-        return render_template('/search_page.html', tags=top10_tags)
+        if session:
+            session.pop("query", None)
+            session.pop("results", None)
+        else:
+            tagdb = search_dict.tagDB()
+            tagdb.connect_database()
+            top10_tags = tagdb.getTaglist(top_n=10, sorted=True)
+            session["template-tags"] = top10_tags
+            tagdb.close_database()
+            del tagdb
+        return render_template('/search_page.html', tags=session.get('template-tags'))
 
-"""
-@app.route('/hello/')
-@app.route('/hello/<name>')
-def hello_world(name=None):
-    return render_template('hello.html', name=name)
-"""
+@app.route('/result_page/', methods=['POST', 'GET'])
+def result_page():
+    if request.method=="POST":
+        #####
+        print("hello")
+    else:
+        query = session.get('query')
+        results = session.get('results')
+        taglist = [result['tags'] for result in results]
+        print(taglist)
+       
+        return render_template('/result_page.html', query=query, results=results, taglist=["hello"])
+
+@app.route('/tag_links')
+def tag_links():
+    return        
