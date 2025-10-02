@@ -5,3 +5,4 @@ checkboxes.forEach(cb =>{
         document.getElementById("option-tags").textContent = "選択タグ:" + selected.join(", ");
     }); 
 });
+

@@ -30,23 +30,25 @@ def search_page():
         session['results'] = results
         return redirect(url_for('result_page'))
     else:
-        if session:
             session.pop("query", None)
             session.pop("results", None)
-        else:
-            tagdb = search_dict.tagDB()
-            tagdb.connect_database()
-            top10_tags = tagdb.getTaglist(top_n=10, sorted=True)
-            session["template-tags"] = top10_tags
-            tagdb.close_database()
-            del tagdb
-        return render_template('/search_page.html', tags=session.get('template-tags'))
+            if session.get('template-tags') is None:
+                tagdb = search_dict.tagDB()
+                top_10_tags = tagdb.getTaglist(top_n=10, sorted=True)
+                session['template-tags'] = list(top_10_tags)
+                tagdb.close_database()
+            if session.get('add_tags') is not None:
+                tmp = session.get('add-tags')
+                print(tmp)
+                #tmp.extends(session.get('add-tags'))
+                #session['template-tags'] = list(set(tmp))
+            return render_template('/search_page.html', tags=session.get('template-tags'))
 
 @app.route('/result_page/', methods=['POST', 'GET'])
 def result_page():
     if request.method=="POST":
-        #####
-        print("hello")
+        session['add_tags'] = request.form.getlist('add_tags')
+        return redirect(url_for('search_page'))
     else:
         query = session.get('query')
         results = session.get('results')

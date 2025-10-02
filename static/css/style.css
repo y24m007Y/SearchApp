@@ -1,26 +1,53 @@
-.tags {
-    display: flex;
+
+/* チェックボックスを隠す */
+input[type="checkbox"] {
+    display: none;
 }
 
-.tag {
-    display:inline-block;
-    color:whitesmoke;
-    background-color:aquamarine;
-    padding: 0 10px 0px 10px;
+/* ラベルのデザイン */
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+  padding: 6px 12px;
+  font-size: 16px;
+  color: #6fa24a;
+  border: 2px solid #6fa24a;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.checkbox-label input[type="checkbox"]{
-    display:none;
+/* ホバー時 */
+.checkbox-label:hover {
+  background-color: #f1f1f4;
 }
 
+/* チェックされたとき */
+input[type="checkbox"]:checked + .checkbox-label {
+  background-color: #6fa24a;
+  color: white;
+}
+
+.container-fruid {
+    width: 60%
+}
+
+.add_tags_message {
+    color:khaki;
+    font-size:14px;
+}
+/*
 .checkbox-label{
-    display: flexbox;
+    display: flex;
+    flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 320px;
-  height: 64px;
-  padding: 8px 24px;
+  max-width: 200px;
+  height: 32px;
+  padding: 6px 12px;
   font-family: sans-serif;
   font-size: 16px;
   color: #6fa24a;
@@ -28,6 +55,7 @@
   overflow-wrap: anywhere;
   background-color: transparent;
   border: 2px solid #6fa24a;
+  border-radius:15px;
   cursor: pointer;
 }
 
@@ -39,5 +67,6 @@
 .checkbox-label:has(input:checked){
     background-color: #f1f1f4;
 }
+*/
 
 

@@ -1,5 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
+    {% if message %}
+        <p class="add_tags_message">{{message}}</p>
+    {% endif %}
+    <div class="container">
         <h2>単語や文章を使って文書の検索ができます</h2>
         <form action="/search_page" method="post">
                 <input name="query">
@@ -8,13 +12,12 @@
                 <summary>検索オプション</summary>
                         <fieldset>
                             <legend>検索タグ設定</legend>
-                            <p>サンプル</p>
-                            {% for tag in tags %}    
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="tag" value="{{tag}}" id="tag" class="tags">
-                                {{ tag }}
-                            </label>
-                            {% endfor %}
+                            <p>検索タグリスト</p>
+                                {% for tag in tags %}   
+                                    <input type="checkbox" name="tag" value="{{tag}}" id="tag-{{ loop.index }}">
+                                    <label for="tag-{{ loop.index }}" class="checkbox-label">{{ tag }}</label>
+                                {% endfor %}
+
                             <p id="option-tags"></p>
                         </fieldset>
                         <fieldset>
@@ -31,4 +34,5 @@
                 </details>
         </form>
         <script src="{{ url_for('static', filename='javasctipt/sample.js') }}"></script>
+    </div>
 {% endblock %}
