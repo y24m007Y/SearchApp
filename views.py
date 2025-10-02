@@ -50,10 +50,12 @@ def result_page():
     else:
         query = session.get('query')
         results = session.get('results')
-        taglist = [result['tags'] for result in results]
-        print(taglist)
-       
-        return render_template('/result_page.html', query=query, results=results, taglist=["hello"])
+        tmp = [result['tags'] for result in results]
+        taglist = []
+        for tags in tmp:
+            taglist.extend(tags)
+        taglist = set(taglist)
+        return render_template('/result_page.html', query=query, results=results, taglist=list(taglist))
 
 @app.route('/tag_links')
 def tag_links():

@@ -11,10 +11,10 @@
                 </label>
                 {% endfor %}
         {% endfor %}
+        <h2>tags</h2>
         <form>
             {% for tag in taglist %}
             <label class="checkbox-label">
-                <input type="checkbox" name="tag" value="{{tag}}" id="tag" class="tags">
                 {{ tag }}
             </label>
             {% endfor %}
