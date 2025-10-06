@@ -17,6 +17,7 @@
         <h2>tags</h2>
         <form action="/result_page" method="post" id="add_tags">
             <button type="submit">タグリストにタグを追加</button>
+            <br>
             {% for tag in taglist %}
             <input type="checkbox" name="add_tags" value={{tag}} id="tag-{{loop.index}}">
             <label for="tag-{{loop.index}}" class="checkbox-label">{{ tag }}</label>

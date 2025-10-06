@@ -38,7 +38,16 @@ input[type="checkbox"]:checked + .checkbox-label {
     color:khaki;
     font-size:14px;
 }
-/*
+
+.cy {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #aaa;
+        }
+
+.tag_links:input[type="radio"] {
+}
+        /*
 .checkbox-label{
     display: flex;
     flex-wrap: wrap;
