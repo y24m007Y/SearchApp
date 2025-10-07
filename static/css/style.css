@@ -4,6 +4,10 @@ input[type="checkbox"] {
     display: none;
 }
 
+input[type="radio"] {
+  display:none
+}
+
 /* ラベルのデザイン */
 .checkbox-label {
   display: inline-flex;
@@ -34,9 +38,27 @@ input[type="checkbox"]:checked + .checkbox-label {
     width: 60%
 }
 
-.add_tags_message {
-    color:khaki;
-    font-size:14px;
+.radio-label {
+  display: inline-flex;
+  align-items:center;
+  justify-content: center;
+  margin: 5px;
+  padding: 6px 12px;
+  font-size:16px;
+  color: orange;
+  border: 0.1mm solid orange;
+  border-
+  cursor:pointer;
+  transition:background-color 0.2s, color 0.2s;
+}
+
+.radio-label:hover {
+  background-color: #f1f1f4;
+}
+
+input[type="radio"]:checked + .radio-label {
+  background-color: orange;
+  color:white
 }
 
 .cy {
@@ -45,7 +67,8 @@ input[type="checkbox"]:checked + .checkbox-label {
             border: 1px solid #aaa;
         }
 
-.tag_links:input[type="radio"] {
+.tag:input[type="radio"] {
+  display: none;
 }
         /*
 .checkbox-label{

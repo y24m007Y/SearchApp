@@ -1,25 +1,27 @@
+
 {% extends "layout.html" %}
 {% block head_scripts %}
-    <script src="cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.33.1/dist/cytoscape.min.js"></script>
 {% endblock %}
 {% block content %}
-    <div class="container">
-        {% if nodes %}
-            <script>
-                const nodesData = {{ nodes | tojson }};
-                const edgesData = {{ edges | tojson }};
-            </script>
-            <div id="cy" class="graph"></div>
-        {% endif %}
-    </div>
-    <div class="container">
-        <form action="/tag_links" method="POST">
-            {% for tag in taglist %}
-                <input type="radio" name="tag" value="{{tag}}" id="tag-{{ loop.index }}">
-                <label for="tag-{{ loop.index }}" class="checkbox-label">{{ tag }}</label>
-            {% endfor %}
-            <button type="submit">タグネットワークを作成</button>
-        </form>
-    </div>
-    <script src="{{url_for('static', filename='javascript/tag_links.js')}}"></script>
+<div class="container">
+    {% if nodes %}
+        <script>
+            const nodesData = {{ nodes | tojson }};
+            const edgesData = {{ edges | tojson }};
+        </script>
+        <div id="cy" class="graph" style="width:800px; height:600px;"></div>
+    {% endif %}
+</div>
+
+<div class="container">
+    <form action="/tag_links" method="POST">
+        {% for tag in taglist %}
+            <input type="radio" name="tag" value="{{ tag }}" id="tag-{{ loop.index }}" class="tag">
+            <label for="tag-{{ loop.index }}" class="radio-label">{{ tag }}</label>
+        {% endfor %}
+        <button type="submit">タグネットワークを作成</button>
+    </form>
+</div>
+<script src="{{ url_for('static', filename='javascript/tag_links.js')}}"
 {% endblock %}

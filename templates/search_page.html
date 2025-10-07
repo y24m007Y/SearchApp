@@ -23,16 +23,16 @@
                         <fieldset>
                             <legend>検索方式</legend>
                             <div>
-                                <input type="radio" id="arg0" name="argoritm" checked value="0" >
-                                <label for="arg0">キーワード検索</label>
+                                <input type="radio" id="arg0" name="argoritm" checked value="0">
+                                <label for="arg0" class="radio-label">キーワード検索</label>
                                 <input type="radio" id="arg1" name="argoritm" value="1">
-                                <label for="arg1">意味検索</label>
+                                <label for="arg1" class="radio-label">意味検索</label>
                                 <input type="radio" id="arg2" name="argoritm" value="2">
-                                <label for="arg2">キーワード+意味検索</label>
+                                <label for="arg2" class="radio-label">キーワード+意味検索</label>
                             </div>
                         </fieldset>
                 </details>
         </form>
-        <script src="{{ url_for('static', filename='javasctipt/sample.js') }}"></script>
+        <script src="{{ url_for('static', filename='javascript/sample.js') }}"></script>
     </div>
 {% endblock %}

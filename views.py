@@ -4,6 +4,7 @@ from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
 import itertools
 
 app.secret_key = 'your_secret_key'
+tag_comb = TagComb.tagcomb()
 
 @app.before_request
 def init_session():
@@ -17,6 +18,7 @@ def init_session():
 
 @app.route('/')
 def create_app():
+    init_session()
     return render_template('index.html')
 
 @app.route('/reset')
@@ -77,16 +79,19 @@ def result_page():
 
 @app.route('/tag_links', methods=["POST", 'GET'])
 def tag_links():
+    tagnet_list = session.get('taglist')
+    print(tagnet_list, tag_comb.bool_table.tags)
+    tagnet_list = [tag for tag in tagnet_list if tag in tag_comb.bool_table.tags.to_list()]
     if request.method=="POST":
         core_tag = request.form['tag']
-        tagcomb = TagComb.tagcomb()
-        tag_network = tagcomb.simulate(core_tag).to_numpy()
+        #tagcomb = TagComb.tagcomb()
+        tag_network = tag_comb.simulate(core_tag).to_numpy()
         print(tag_network)
         #nodes = [{'data': {'id':tag_network[i]}}  for i in range(len(tag_network))]
         #edges = {'data': {'source':core_tag, 'target':tag_network[i], 'width':len(tag_network)-i} for i in range(len(tag_network))}
         nodes = [{'data': {'id': tag_network[i]}} for i in range(len(tag_network))]
-        edges = [{'data': {'source': core_tag, 'target': tag_network[i], 'width': len(tag_network)-i}} for i in range(len(tag_network))]
+        edges = [{'data': {'source': core_tag, 'target': tag_network[i], 'width': len(tag_network)-i}} for i in range(len(tag_network)) if tag_network[i] != core_tag]
         print(nodes, edges)
-        return render_template('/tag_links.html', taglist=session.get('taglist'), nodes=nodes, edges=edges)
+        return render_template('/tag_links.html', taglist=tagnet_list, nodes=nodes, edges=edges)
     else:
-        return  render_template('/tag_links.html', taglist=session.get('taglist'), nodes=[], edges=[])
+        return  render_template('/tag_links.html', taglist=tagnet_list, nodes=[], edges=[])
