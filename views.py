@@ -1,12 +1,28 @@
-from flask import render_template, url_for, request, redirect, session
+from flask import render_template, url_for, request, redirect, session, g
 from SearchApp import app
 from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
-import itertools
+import numpy as np
+import colorsys
 
 app.secret_key = 'your_secret_key'
-tag_comb = TagComb.tagcomb()
 
-@app.before_request
+def sort_tags(taglist):
+    taglist = list(set(taglist))
+    sort_index = np.argsort([g.tagdb.getCount(tag)[0] for tag in taglist])[::-1]
+    taglist = [taglist[i] for i in sort_index]
+    return taglist
+
+def connect_tagdb():
+    if "tagdb" not in g:
+        g.tagdb = search_dict.tagDB()
+        g.tagdb.connect_database()
+        
+def make_color(tag):
+    count = g.tagdb.getCount(tag)
+    hue = 1/count[0]
+    rgb = colorsys.hsv_to_rgb(hue, 1, 1)
+    return '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+
 def init_session():
     if session.get('init') is None:
         session['init'] = True
@@ -16,8 +32,16 @@ def init_session():
         session.pop('add_tags', None)
         session.pop('taglist', None)
 
+@app.after_request
+def close_tagdb(response):
+    db = getattr(g, "tagdb", None)
+    if db is not None:
+        db.close_database()
+    return response
+
 @app.route('/')
 def create_app():
+    session.clear()
     init_session()
     return render_template('index.html')
 
@@ -29,6 +53,7 @@ def reset_session():
 
 @app.route('/search_page', methods=['POST', 'GET'])
 def search_page():
+    connect_tagdb()
     if request.method=="POST":
         query = request.form['query']
         argorithm = request.form['argoritm']
@@ -43,26 +68,25 @@ def search_page():
             print("適切なフォームが送信されていません")
             return
         results = engin.search(query, tags)
-        print(tags)
         session['query'] = query
         session['results'] = results
         return redirect(url_for('result_page'))
     else:
             if session.get('template-tags') is None:
-                tagdb = search_dict.tagDB()
-                top_10_tags = tagdb.getTaglist(top_n=10, sorted=True)
+                top_10_tags = g.tagdb.getTaglist(top_n=10, sorted=True)
                 session['template-tags'] = list(top_10_tags)
-                tagdb.close_database()
+                print(top_10_tags)
                 session['taglist'] = session.get('template-tags')
             else:
                 if session.get('add_tags') is not None:
                     tmp = session.pop('taglist', None)
                     tmp.extend(session.get('add_tags'))
-                    session['taglist'] = list(set(tmp))
+                    session['taglist'] = sort_tags(tmp)
             return render_template('/search_page.html', tags=session.get('taglist'))
 
 @app.route('/result_page', methods=['POST', 'GET'])
 def result_page():
+    connect_tagdb()
     if request.method=="POST":
         print(request.form.getlist('add_tags'))
         session['add_tags'] = request.form.getlist('add_tags')
@@ -74,24 +98,20 @@ def result_page():
         taglist = []
         for tags in tmp:
             taglist.extend(tags)
-        taglist = set(taglist)
-        return render_template('/result_page.html', query=query, results=results, taglist=list(taglist))
+        taglist = sort_tags(taglist)
+        return render_template('/result_page.html', query=query, results=results, taglist=taglist)
 
 @app.route('/tag_links', methods=["POST", 'GET'])
 def tag_links():
+    connect_tagdb()
+    tag_comb = TagComb.tagcomb()
     tagnet_list = session.get('taglist')
-    print(tagnet_list, tag_comb.bool_table.tags)
-    tagnet_list = [tag for tag in tagnet_list if tag in tag_comb.bool_table.tags.to_list()]
+    tagnet_list = sort_tags([tag for tag in tagnet_list if tag in tag_comb.bool_table.tags.to_list()])
     if request.method=="POST":
         core_tag = request.form['tag']
-        #tagcomb = TagComb.tagcomb()
         tag_network = tag_comb.simulate(core_tag).to_numpy()
-        print(tag_network)
-        #nodes = [{'data': {'id':tag_network[i]}}  for i in range(len(tag_network))]
-        #edges = {'data': {'source':core_tag, 'target':tag_network[i], 'width':len(tag_network)-i} for i in range(len(tag_network))}
-        nodes = [{'data': {'id': tag_network[i]}} for i in range(len(tag_network))]
+        nodes = [{'data': {'id': tag, 'color': make_color(tag), 'count':g.tagdb.getCount(tag)[0]}} for tag in tag_network]
         edges = [{'data': {'source': core_tag, 'target': tag_network[i], 'width': len(tag_network)-i}} for i in range(len(tag_network)) if tag_network[i] != core_tag]
-        print(nodes, edges)
         return render_template('/tag_links.html', taglist=tagnet_list, nodes=nodes, edges=edges)
     else:
         return  render_template('/tag_links.html', taglist=tagnet_list, nodes=[], edges=[])

@@ -47,7 +47,6 @@ input[type="checkbox"]:checked + .checkbox-label {
   font-size:16px;
   color: orange;
   border: 0.1mm solid orange;
-  border-
   cursor:pointer;
   transition:background-color 0.2s, color 0.2s;
 }

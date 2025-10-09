@@ -17,7 +17,7 @@ window.addEventListener('DOMContentLoaded', () => {
         edges: edgesData
       },
       style: [
-        { selector: 'node', style: { 'background-color': 'skyblue', 'label': 'data(id)' }},
+        { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(id)', 'width':'mapData(data(count),1,300,20,60)', 'height':'mapData(data(count),1,300,20,60)'}},
         { selector: 'edge', style: { 'line-color': '#888', 'width': 'data(width)' }}
       ],
       layout: { name: 'cose' }
