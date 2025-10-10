@@ -3,20 +3,55 @@ from SearchApp import app
 from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
 import numpy as np
 import colorsys
+import asyncio
+from openai import AsyncOpenAI
+import os, sys
+from dotenv import load_dotenv
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+#環境情報の取得
+load_dotenv()
+#apikeyの設定
+api_key = os.getenv("OPENAI_API_KEY")
 
 app.secret_key = 'your_secret_key'
+text_generator = AsyncOpenAI()
 
 def sort_tags(taglist):
-    taglist = list(set(taglist))
     sort_index = np.argsort([g.tagdb.getCount(tag)[0] for tag in taglist])[::-1]
     taglist = [taglist[i] for i in sort_index]
     return taglist
+
+def connect_articledb():
+    if "articledb" not in g:
+        g.articledb = search_dict.articleDB()
+        g.articledb.connect_database()
 
 def connect_tagdb():
     if "tagdb" not in g:
         g.tagdb = search_dict.tagDB()
         g.tagdb.connect_database()
-        
+
+async def text_summarizer(text):
+    res = await text_generator.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content":"あなたは情報技術文書の要約専門のアシスタントです"},
+            {"role":"user", "content": f"次の文章の見出しを生成してください。{text}"}]
+            )
+    return res.choices[0].message.content
+
+async def article_summarize(article_ids):
+    splitters = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
+        model_name="gpt-4o-mini",
+        chunk_size=1500,
+        chunk_overlap=50
+    )
+    bodies = [g.articledb.getbody(article_id)[0] for article_id in article_ids]
+    split_body_head = [splitters.split_text(body)[0] for body in bodies]
+    tasks = [text_summarizer(text) for text in split_body_head]
+    results = await asyncio.gather(*tasks)
+    return results
 def make_color(tag):
     count = g.tagdb.getCount(tag)
     hue = 1/count[0]
@@ -33,10 +68,13 @@ def init_session():
         session.pop('taglist', None)
 
 @app.after_request
-def close_tagdb(response):
-    db = getattr(g, "tagdb", None)
-    if db is not None:
-        db.close_database()
+def close_db(response):
+    tagdb = getattr(g, "tagdb", None)
+    articledb = getattr(g, "articledb", None)
+    if tagdb is not None:
+        tagdb.close_database()
+    if articledb is not None:
+        articledb.close_database()
     return response
 
 @app.route('/')
@@ -87,6 +125,7 @@ def search_page():
 @app.route('/result_page', methods=['POST', 'GET'])
 def result_page():
     connect_tagdb()
+    connect_articledb()
     if request.method=="POST":
         print(request.form.getlist('add_tags'))
         session['add_tags'] = request.form.getlist('add_tags')
@@ -98,8 +137,18 @@ def result_page():
         taglist = []
         for tags in tmp:
             taglist.extend(tags)
+        #pxys = {tag: taglist.count(tag)/len(results) for tag in taglist} #検索結果上位N件に特定のタグが含まれている記事の出現確率
+        taglist = list(set(taglist))
+        #comb = TagComb.tagcomb()
         taglist = sort_tags(taglist)
-        return render_template('/result_page.html', query=query, results=results, taglist=taglist)
+        article_ids = [result['article_id'] for result in results]
+        headings = asyncio.run(article_summarize(article_ids=article_ids))
+        #pxs = comb.Px(taglist)
+        #score = {tag: pxys[tag]*pxs[tag] if tag in pxs.keys() else 0 for tag in taglist} 
+        #score = dict(sorted(score.items(), key=lambda x:x[1], reverse=True)) #特定のタグが付与された記事の出現確率と検索結果上位N件に出現する記事の出現確率のPMI
+        #taglist = list(score.keys())[:5]
+        print(headings)
+        return render_template('/result_page.html', query=query, results=results, taglist=taglist[:10])
 
 @app.route('/tag_links', methods=["POST", 'GET'])
 def tag_links():
