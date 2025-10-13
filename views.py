@@ -1,11 +1,12 @@
-from flask import render_template, url_for, request, redirect, session, g
+from flask import render_template, url_for, request, redirect, session, g, jsonify
 from SearchApp import app
 from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
 import numpy as np
 import colorsys
 import asyncio
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, OpenAI
 import os, sys
+import re
 from dotenv import load_dotenv
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -16,6 +17,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 
 app.secret_key = 'your_secret_key'
 text_generator = AsyncOpenAI()
+explainer = OpenAI()
 
 def sort_tags(taglist):
     sort_index = np.argsort([g.tagdb.getCount(tag)[0] for tag in taglist])[::-1]
@@ -37,7 +39,7 @@ async def text_summarizer(text):
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content":"あなたは情報技術文書の要約専門のアシスタントです"},
-            {"role":"user", "content": f"次の文章の見出しを生成してください。{text}"}]
+            {"role":"user", "content": f"次の文章の要約を100文字以内で作ってください。また、見出しは初心者でも理解できるような内容で1つのみ出力してください{text}"}]
             )
     return res.choices[0].message.content
 
@@ -52,6 +54,17 @@ async def article_summarize(article_ids):
     tasks = [text_summarizer(text) for text in split_body_head]
     results = await asyncio.gather(*tasks)
     return results
+
+def tag_explainer(tag):
+    res = explainer.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role":"system", "content":"あなたは情報技術に関するスペシャリストです"},
+            {"role":"user", "content":f"次の単語について初心者でも理解できるように100文字程度で簡単に説明してください。{tag}"}
+        ]
+    )
+    return res.choices[0].message.content
+
 def make_color(tag):
     count = g.tagdb.getCount(tag)
     hue = 1/count[0]
@@ -143,6 +156,9 @@ def result_page():
         taglist = sort_tags(taglist)
         article_ids = [result['article_id'] for result in results]
         headings = asyncio.run(article_summarize(article_ids=article_ids))
+        headings = [re.sub(r"[#\n\u3000\s\t]+", "", heading) for heading in headings]
+        for i in range(len(results)):
+            results[i]["heading"] = headings[i]
         #pxs = comb.Px(taglist)
         #score = {tag: pxys[tag]*pxs[tag] if tag in pxs.keys() else 0 for tag in taglist} 
         #score = dict(sorted(score.items(), key=lambda x:x[1], reverse=True)) #特定のタグが付与された記事の出現確率と検索結果上位N件に出現する記事の出現確率のPMI
@@ -158,9 +174,19 @@ def tag_links():
     tagnet_list = sort_tags([tag for tag in tagnet_list if tag in tag_comb.bool_table.tags.to_list()])
     if request.method=="POST":
         core_tag = request.form['tag']
+        session['core_tag'] = core_tag
         tag_network = tag_comb.simulate(core_tag).to_numpy()
         nodes = [{'data': {'id': tag, 'color': make_color(tag), 'count':g.tagdb.getCount(tag)[0]}} for tag in tag_network]
         edges = [{'data': {'source': core_tag, 'target': tag_network[i], 'width': len(tag_network)-i}} for i in range(len(tag_network)) if tag_network[i] != core_tag]
         return render_template('/tag_links.html', taglist=tagnet_list, nodes=nodes, edges=edges)
     else:
         return  render_template('/tag_links.html', taglist=tagnet_list, nodes=[], edges=[])
+    
+@app.route('/tag_explain', methods=["POST"])
+def tag_explain():
+    data = request.get_json()
+    tag = data['word']
+    explain = tag_explainer(tag)
+    explain = re.sub(r'[#\n\u3000\t]+', "", explain)
+    print(explain)
+    return jsonify({'status':'ok', 'explain':explain})

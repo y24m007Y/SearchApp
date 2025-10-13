@@ -17,10 +17,29 @@ window.addEventListener('DOMContentLoaded', () => {
         edges: edgesData
       },
       style: [
-        { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(id)', 'width':'mapData(data(count),1,300,20,60)', 'height':'mapData(data(count),1,300,20,60)'}},
+        { selector: 'node', style: { 'background-color': 'data(color)', 'label': 'data(id)', 'font-size':'8'}},
         { selector: 'edge', style: { 'line-color': '#888', 'width': 'data(width)' }}
       ],
-      layout: { name: 'cose' }
+      layout: { name: 'cose'}
+    });
+      cy.on('tap', 'node', function(evt) {
+      const node = evt.target;
+      const word = node.data('id');
+      document.getElementById("explain_tag").textContent = word;
+      fetch('/tag_explain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ word: word })
+        })
+        .then(res => res.json())
+        .then(data => {
+        document.getElementById("explain").textContent = data.explain;
+      });
     });
   }
 });
+
+
+

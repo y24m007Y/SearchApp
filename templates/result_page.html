@@ -11,6 +11,10 @@
                     {{ tag }}
                 </label>
                 {% endfor %}
+                <details>
+                    <summary class="summarized">文書概要</summary>
+                    <p class="article_heading">{{result.heading}}</p>
+                </details>
         {% endfor %}
         </div>
         <div class="container">
