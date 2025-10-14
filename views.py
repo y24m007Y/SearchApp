@@ -74,10 +74,6 @@ def make_color(tag):
 def init_session():
     if session.get('init') is None:
         session['init'] = True
-        session.pop('query', None)
-        session.pop('results', None)
-        session.pop('template-tags', None)
-        session.pop('add_tags', None)
         session.pop('taglist', None)
 
 @app.after_request
@@ -120,19 +116,25 @@ def search_page():
             return
         results = engin.search(query, tags)
         session['query'] = query
-        session['results'] = results
+        session['article_id'] = results
         return redirect(url_for('result_page'))
     else:
+            """
             if session.get('template-tags') is None:
                 top_10_tags = g.tagdb.getTaglist(top_n=10, sorted=True)
                 session['template-tags'] = list(top_10_tags)
                 print(top_10_tags)
                 session['taglist'] = session.get('template-tags')
             else:
-                if session.get('add_tags') is not None:
-                    tmp = session.pop('taglist', None)
-                    tmp.extend(session.get('add_tags'))
-                    session['taglist'] = sort_tags(tmp)
+            """
+            if session.get('add_tags') is not None:
+                tmp = session.get('taglist')
+                if tmp is None:
+                    tmp = session.pop('add_tags', None)
+                else:
+                    tmp.extend(session.pop('add_tags', None))
+                    tmp = list(set(tmp))
+                session['taglist'] = sort_tags(tmp)
             return render_template('/search_page.html', tags=session.get('taglist'))
 
 @app.route('/result_page', methods=['POST', 'GET'])
@@ -144,26 +146,23 @@ def result_page():
         session['add_tags'] = request.form.getlist('add_tags')
         return redirect(url_for('search_page'))
     else:
-        query = session.get('query')
-        results = session.get('results')
-        tmp = [result['tags'] for result in results]
+        query = session.pop('query', None)
+        article_ids = session.pop('article_id', None)
+        results = [{"title":g.articledb.getTitle(article_id)[0],"url":g.articledb.getURL(article_id)[0], "tags":[tag for tag in g.articledb.getTags(article_id)]} for article_id in article_ids]
         taglist = []
-        for tags in tmp:
-            taglist.extend(tags)
         #pxys = {tag: taglist.count(tag)/len(results) for tag in taglist} #検索結果上位N件に特定のタグが含まれている記事の出現確率
-        taglist = list(set(taglist))
         #comb = TagComb.tagcomb()
-        taglist = sort_tags(taglist)
-        article_ids = [result['article_id'] for result in results]
         headings = asyncio.run(article_summarize(article_ids=article_ids))
         headings = [re.sub(r"[#\n\u3000\s\t]+", "", heading) for heading in headings]
-        for i in range(len(results)):
-            results[i]["heading"] = headings[i]
+        for i in range(len(article_ids)):
+            results[i]['heading'] = headings[i]
+            taglist.extend(results[i]['tags'])
+        taglist = list(set(taglist))
+        taglist = sort_tags(taglist)
         #pxs = comb.Px(taglist)
         #score = {tag: pxys[tag]*pxs[tag] if tag in pxs.keys() else 0 for tag in taglist} 
         #score = dict(sorted(score.items(), key=lambda x:x[1], reverse=True)) #特定のタグが付与された記事の出現確率と検索結果上位N件に出現する記事の出現確率のPMI
         #taglist = list(score.keys())[:5]
-        print(headings)
         return render_template('/result_page.html', query=query, results=results, taglist=taglist[:10])
 
 @app.route('/tag_links', methods=["POST", 'GET'])
