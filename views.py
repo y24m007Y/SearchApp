@@ -8,7 +8,7 @@ from openai import AsyncOpenAI, OpenAI
 import os, sys
 import re
 from dotenv import load_dotenv
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 #環境情報の取得
 load_dotenv()
@@ -148,8 +148,9 @@ def result_page():
     else:
         query = session.pop('query', None)
         article_ids = session.pop('article_id', None)
-        results = [{"title":g.articledb.getTitle(article_id)[0],"url":g.articledb.getURL(article_id)[0], "tags":[tag for tag in g.articledb.getTags(article_id)]} for article_id in article_ids]
+        results = [{"title":g.articledb.getTitle(article_id)[0],"url":g.articledb.getURL(article_id)[0], "tags":[tag[0] for tag in g.articledb.getTags(article_id)]} for article_id in article_ids]
         taglist = []
+        print(results)
         #pxys = {tag: taglist.count(tag)/len(results) for tag in taglist} #検索結果上位N件に特定のタグが含まれている記事の出現確率
         #comb = TagComb.tagcomb()
         headings = asyncio.run(article_summarize(article_ids=article_ids))
