@@ -8,7 +8,7 @@ from openai import AsyncOpenAI, OpenAI
 import os, sys
 import re
 from dotenv import load_dotenv
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 #環境情報の取得
 load_dotenv()
@@ -142,13 +142,13 @@ def result_page():
     connect_tagdb()
     connect_articledb()
     if request.method=="POST":
-        print(request.form.getlist('add_tags'))
+        #print(request.form.getlist('add_tags'))
         session['add_tags'] = request.form.getlist('add_tags')
         return redirect(url_for('search_page'))
     else:
         query = session.pop('query', None)
         article_ids = session.pop('article_id', None)
-        results = [{"title":g.articledb.getTitle(article_id)[0],"url":g.articledb.getURL(article_id)[0], "tags":[tag for tag in g.articledb.getTags(article_id)]} for article_id in article_ids]
+        results = [{"title":g.articledb.getTitle(article_id)[0],"url":g.articledb.getURL(article_id)[0], "tags":[tag[0] for tag in g.articledb.getTags(article_id)]} for article_id in article_ids]
         taglist = []
         #pxys = {tag: taglist.count(tag)/len(results) for tag in taglist} #検索結果上位N件に特定のタグが含まれている記事の出現確率
         #comb = TagComb.tagcomb()
@@ -187,5 +187,4 @@ def tag_explain():
     tag = data['word']
     explain = tag_explainer(tag)
     explain = re.sub(r'[#\n\u3000\t]+', "", explain)
-    print(explain)
     return jsonify({'status':'ok', 'explain':explain})
