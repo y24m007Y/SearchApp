@@ -1,5 +1,5 @@
 from flask import render_template, url_for, request, redirect, session, g, jsonify
-from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
+from .QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
 import numpy as np
 import colorsys
 import asyncio
