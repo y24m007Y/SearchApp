@@ -97,4 +97,5 @@ wheel
 xxhash
 zipp 
 zstandard
+Gunicorn
 git+https://${GITHUB_TOKEN}@github.com/y24m007Y/QiitaSearch.git
