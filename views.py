@@ -18,8 +18,6 @@ app.secret_key = 'your_secret_key'
 text_generator = AsyncOpenAI()
 explainer = OpenAI()
 
-app = Flask(__name__)
-
 def sort_tags(taglist):
     sort_index = np.argsort([g.tagdb.getCount(tag)[0] for tag in taglist])[::-1]
     taglist = [taglist[i] for i in sort_index]
