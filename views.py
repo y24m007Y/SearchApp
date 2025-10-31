@@ -16,8 +16,8 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     api_key = os.getenv('OPENAI_KEY')
 
-text_generator = AsyncOpenAI()
-explainer = OpenAI()
+text_generator = AsyncOpenAI(api_key=api_key)
+explainer = OpenAI(api_key=api_key)
 
 print("views.py")
 
