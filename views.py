@@ -20,6 +20,7 @@ text_generator = AsyncOpenAI(api_key=api_key)
 explainer = OpenAI(api_key=api_key)
 
 print("views.py")
+print(os.getenv('DATABASE_URL')
 
 from flask import Blueprint
 bp = Blueprint("main_bp", __name__)
