@@ -13,6 +13,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 load_dotenv()
 #apikeyの設定
 api_key = os.getenv("OPENAI_API_KEY")
+if api_key is None:
+    api_key = os.getenv('OPENAI_KEY')
 
 text_generator = AsyncOpenAI()
 explainer = OpenAI()
