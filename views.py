@@ -1,4 +1,4 @@
-from flask import render_template, url_for, request, redirect, session, g, jsonify
+from flask import render_template, url_for, request, redirect, session, g, jsonify, Blueprint
 from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
 import numpy as np
 import colorsys
@@ -14,9 +14,13 @@ load_dotenv()
 #apikeyの設定
 api_key = os.getenv("OPENAI_API_KEY")
 
-app.secret_key = 'your_secret_key'
 text_generator = AsyncOpenAI()
 explainer = OpenAI()
+
+print("views.py")
+
+from flask import Blueprint
+bp = Blueprint("main_bp", __name__)
 
 def sort_tags(taglist):
     sort_index = np.argsort([g.tagdb.getCount(tag)[0] for tag in taglist])[::-1]
@@ -75,7 +79,7 @@ def init_session():
         session['init'] = True
         session.pop('taglist', None)
 
-@app.after_request
+@bp.after_request
 def close_db(response):
     tagdb = getattr(g, "tagdb", None)
     articledb = getattr(g, "articledb", None)
@@ -85,19 +89,19 @@ def close_db(response):
         articledb.close_database()
     return response
 
-@app.route('/')
-def create_app():
+@bp.route('/', endpoint='home')
+def Startbp():
     session.clear()
     init_session()
-    return render_template('index.html')
+    return render_template('/index.html')
 
-@app.route('/reset')
+@bp.route('/reset', endpoint='reset')
 def reset_session():
     session.clear()
     init_session()
     return render_template("/reset.html")
 
-@app.route('/search_page', methods=['POST', 'GET'])
+@bp.route('/search_page', methods=['POST', 'GET'], endpoint='search_page')
 def search_page():
     connect_tagdb()
     if request.method=="POST":
@@ -116,7 +120,7 @@ def search_page():
         results = engin.search(query, tags)
         session['query'] = query
         session['article_id'] = results
-        return redirect(url_for('result_page'))
+        return redirect(url_for('main_bp.result_page'))
     else:
             """
             if session.get('template-tags') is None:
@@ -136,14 +140,14 @@ def search_page():
                 session['taglist'] = sort_tags(tmp)
             return render_template('/search_page.html', tags=session.get('taglist'))
 
-@app.route('/result_page', methods=['POST', 'GET'])
+@bp.route('/result_page', methods=['POST', 'GET'], endpoint='result_page')
 def result_page():
     connect_tagdb()
     connect_articledb()
     if request.method=="POST":
         #print(request.form.getlist('add_tags'))
         session['add_tags'] = request.form.getlist('add_tags')
-        return redirect(url_for('search_page'))
+        return redirect(url_for('main_bp.search_page'))
     else:
         query = session.pop('query', None)
         article_ids = session.pop('article_id', None)
@@ -164,7 +168,7 @@ def result_page():
         #taglist = list(score.keys())[:5]
         return render_template('/result_page.html', query=query, results=results, taglist=taglist[:10])
 
-@app.route('/tag_links', methods=["POST", 'GET'])
+@bp.route('/tag_links', methods=["POST", 'GET'], endpoint='tag_links')
 def tag_links():
     connect_tagdb()
     tag_comb = TagComb.tagcomb()
@@ -180,7 +184,7 @@ def tag_links():
     else:
         return  render_template('/tag_links.html', taglist=tagnet_list, nodes=[], edges=[])
     
-@app.route('/tag_explain', methods=["POST"])
+@bp.route('/tag_explain', methods=["POST"], endpoint='tag_explain')
 def tag_explain():
     data = request.get_json()
     tag = data['word']

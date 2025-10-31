@@ -20,13 +20,13 @@
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                             <li class="nav-item">
-                                <a class="nav-link" href="{{url_for("search_page")}}" style="color: white">検索</a>
+                                <a class="nav-link" href="{{url_for("main_bp.search_page")}}" style="color: white">検索</a>
                             </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" style="color: white">タグリスト</a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{{url_for("tag_links")}}" style="color: #101010">タグネットワーク</a></li>
-                                    <li><a class="dropdown-item" href="{{url_for("reset_session")}}" onclick="return confirm('タグリストを初期化しますか？')" style="color: #101010">リスト初期化</a></li>
+                                    <li><a class="dropdown-item" href="{{url_for("main_bp.tag_links")}}" style="color: #101010">タグネットワーク</a></li>
+                                    <li><a class="dropdown-item" href="{{url_for("main_bp.reset")}}" onclick="return confirm('タグリストを初期化しますか？')" style="color: #101010">リスト初期化</a></li>
                                 </ul>
                             </li>
                         </ul>
