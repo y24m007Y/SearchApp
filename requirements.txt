@@ -53,7 +53,8 @@ ormsgpack
 packaging 
 pandas
 parso 
-pexpect 
+pexpect
+pgvector 
 pickleshare 
 pillow
 plac
