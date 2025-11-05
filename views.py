@@ -1,5 +1,4 @@
 from flask import render_template, url_for, request, redirect, session, g, jsonify, Blueprint
-from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
 import numpy as np
 import colorsys
 import asyncio
@@ -9,6 +8,11 @@ import re
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+#記事検索モジュールのパスを指定
+sys.path.append("QiitaSearch")
+
+from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
+
 #環境情報の取得
 load_dotenv()
 #apikeyの設定
@@ -16,29 +20,25 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     api_key = os.getenv('OPENAI_KEY')
 
+#概要生成、タグ説明
 text_generator = AsyncOpenAI(api_key=api_key)
 explainer = OpenAI(api_key=api_key)
-
-print("views.py")
-print("これはデータベースへのURLです",os.getenv('DATABASE_URL'))
 
 from flask import Blueprint
 bp = Blueprint("main_bp", __name__)
 
 def sort_tags(taglist):
-    sort_index = np.argsort([g.tagdb.getCount(tag)[0] for tag in taglist])[::-1]
-    taglist = [taglist[i] for i in sort_index]
-    return taglist
+    tag_counts = dict(g.tagdb.getCount(taglist, isname=True))
+    sort_tags = dict(sorted(tag_counts.items(), key=lambda x: x[1], reverse=True))
+    return list(sort_tags.keys())
 
 def connect_articledb():
     if "articledb" not in g:
         g.articledb = search_dict.articleDB()
-        g.articledb.connect_database()
 
 def connect_tagdb():
     if "tagdb" not in g:
         g.tagdb = search_dict.tagDB()
-        g.tagdb.connect_database()
 
 async def text_summarizer(text):
     res = await text_generator.chat.completions.create(
@@ -55,8 +55,8 @@ async def article_summarize(article_ids):
         chunk_size=1500,
         chunk_overlap=50
     )
-    bodies = [g.articledb.getbody(article_id)[0] for article_id in article_ids]
-    split_body_head = [splitters.split_text(body)[0] for body in bodies]
+    bodies = dict(g.articledb.getbody(article_ids, isid=True))
+    split_body_head = [splitters.split_text(bodies[key])[0] for key in article_ids]
     tasks = [text_summarizer(text) for text in split_body_head]
     results = await asyncio.gather(*tasks)
     return results
@@ -72,7 +72,7 @@ def tag_explainer(tag):
     return res.choices[0].message.content
 
 def make_color(tag):
-    count = g.tagdb.getCount(tag)
+    count = g.tagdb.getCount(tag)[0]
     hue = 1/count[0]
     rgb = colorsys.hsv_to_rgb(hue, 1, 1)
     return '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
@@ -154,12 +154,15 @@ def result_page():
     else:
         query = session.pop('query', None)
         article_ids = session.pop('article_id', None)
-        results = [{"title":g.articledb.getTitle(article_id)[0],"url":g.articledb.getURL(article_id)[0], "tags":[tag[0] for tag in g.articledb.getTags(article_id)]} for article_id in article_ids]
-        taglist = []
+        titles = dict(g.articledb.getTitle(article_ids, isid=True))
+        urls =dict(g.articledb.getURL(article_ids, isid=True))
+        tags = g.articledb.getTags(article_ids)
+        results = [{"title":titles[article_id],"url":urls[article_id], "tags":tags[article_id]} for article_id in article_ids]
         #pxys = {tag: taglist.count(tag)/len(results) for tag in taglist} #検索結果上位N件に特定のタグが含まれている記事の出現確率
         #comb = TagComb.tagcomb()
         headings = asyncio.run(article_summarize(article_ids=article_ids))
         headings = [re.sub(r"[#\n\u3000\s\t]+", "", heading) for heading in headings]
+        taglist = []
         for i in range(len(article_ids)):
             results[i]['heading'] = headings[i]
             taglist.extend(results[i]['tags'])
