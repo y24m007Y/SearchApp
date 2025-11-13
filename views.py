@@ -56,7 +56,7 @@ async def article_summarize(article_ids):
         chunk_overlap=50
     )
     bodies = dict(g.articledb.getbody(article_ids, isid=True))
-    split_body_head = [splitters.split_text(bodies[key])[0] for key in article_ids]
+    split_body_head = [splitters.split_text(bodies[key]) for key in article_ids]
     tasks = [text_summarizer(text) for text in split_body_head]
     results = await asyncio.gather(*tasks)
     return results
