@@ -71,9 +71,8 @@ def tag_explainer(tag):
     )
     return res.choices[0].message.content
 
-def make_color(tag):
-    count = g.tagdb.getCount(tag)[0]
-    hue = 1/count[0]
+def make_color(count):
+    hue = 1/count
     rgb = colorsys.hsv_to_rgb(hue, 1, 1)
     return '#%02x%02x%02x' % (int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
 
@@ -183,8 +182,9 @@ def tag_links():
     if request.method=="POST":
         core_tag = request.form['tag']
         session['core_tag'] = core_tag
-        tag_network = tag_comb.simulate(core_tag).to_numpy()
-        nodes = [{'data': {'id': tag, 'color': make_color(tag), 'count':g.tagdb.getCount(tag)[0]}} for tag in tag_network]
+        tag_network = tag_comb.simulate(core_tag).to_list()
+        counts = dict(g.tagdb.getCount(tag_network, isname=True))
+        nodes = [{'data': {'id': tag, 'color': make_color(counts[tag]), 'count':counts[tag]}} for tag in tag_network]
         edges = [{'data': {'source': core_tag, 'target': tag_network[i], 'width': len(tag_network)-i}} for i in range(len(tag_network)) if tag_network[i] != core_tag]
         return render_template('/tag_links.html', taglist=tagnet_list, nodes=nodes, edges=edges)
     else:
