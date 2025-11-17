@@ -4,6 +4,9 @@
     <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.33.1/dist/cytoscape.min.js"></script>
 {% endblock %}
 {% block content %}
+{% if popup %}
+    <script>alert(popup);</script>
+{% endif %}
 <div class="container">
     {% if nodes %}
         <script>
@@ -15,18 +18,23 @@
 </div>
 
 <div class="container">
-    <form action="/tag_links" method="POST">
+    <form action="/tag_links" id="explainer" method="POST">
         {% for tag in taglist %}
             <input type="radio" name="tag" value="{{ tag }}" id="tag-{{ loop.index }}" class="tag">
             <label for="tag-{{ loop.index }}" class="radio-label">{{ tag }}</label>
         {% endfor %}
-        <button type="submit">タグネットワークを作成</button>
+        <button type="submit" form="explainer">タグネットワークを作成</button>
     </form>
 </div>
 <div class="container">
     <p>要約対象のラベル</p>
-    <p id="explain_tag" class="checkbox-label"></p>
-    <p id="explain"></p> 
+    <form action="/add_tag" id="tagadder" method="POST">
+        <input type="hidden" name="click_tag" id="hidden_add_tag">
+        <p id="explain_tag" class="checkbox-label"></p>
+        <p id="explain"></p>
+        <button type="submit" form="tagadder">タグリストにタグを追加</button>
+    </form>
 </div>
+
 <script src="{{ url_for('static', filename='javascript/tag_links.js')}}"
 {% endblock %}

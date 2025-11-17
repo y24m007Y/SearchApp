@@ -179,6 +179,7 @@ def tag_links():
     tag_comb = TagComb.tagcomb()
     tagnet_list = session.get('taglist')
     tagnet_list = sort_tags([tag for tag in tagnet_list if tag in tag_comb.bool_table.tags.to_list()])
+    popup = session.pop('popup', None)
     if request.method=="POST":
         core_tag = request.form['tag']
         session['core_tag'] = core_tag
@@ -186,9 +187,9 @@ def tag_links():
         counts = dict(g.tagdb.getCount(tag_network, isname=True))
         nodes = [{'data': {'id': tag, 'color': make_color(counts[tag]), 'count':counts[tag]}} for tag in tag_network]
         edges = [{'data': {'source': core_tag, 'target': tag_network[i], 'width': len(tag_network)-i}} for i in range(len(tag_network)) if tag_network[i] != core_tag]
-        return render_template('/tag_links.html', taglist=tagnet_list, nodes=nodes, edges=edges)
+        return render_template('/tag_links.html', popup=popup, taglist=tagnet_list, nodes=nodes, edges=edges)
     else:
-        return  render_template('/tag_links.html', taglist=tagnet_list, nodes=[], edges=[])
+        return  render_template('/tag_links.html', popup=popup, taglist=tagnet_list, nodes=[], edges=[])
     
 @bp.route('/tag_explain', methods=["POST"], endpoint='tag_explain')
 def tag_explain():
@@ -197,3 +198,10 @@ def tag_explain():
     explain = tag_explainer(tag)
     explain = re.sub(r'[#\n\u3000\t]+', "", explain)
     return jsonify({'status':'ok', 'explain':explain})
+
+@bp.route('/add_tag', methods=["POST"], endpoint='add_tag')
+def add_tag():
+    data = request.form['click_tag']
+    session['taglist'].append(data)
+    session['popup'] = "taglistにタグを追加しました。"
+    return redirect(url_for('main_bp.tag_links'))

@@ -26,6 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const node = evt.target;
       const word = node.data('id');
       document.getElementById("explain_tag").textContent = word;
+      document.getElementById("hidden_add_tag").textContet = word;
       fetch('/tag_explain', {
         method: 'POST',
         headers: {

@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
+<a href="{{url_for("main_bp.search_page")}}">検索画面に戻る</a>
 {% if query %}
     <h1>Search result :{{query}}</h1> <br>
     {% if results %}
