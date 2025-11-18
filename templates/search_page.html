@@ -1,7 +1,9 @@
 {% extends "layout.html" %}
 {% block content %}
-    {% if message %}
-        <p class="add_tags_message">{{message}}</p>
+    {% if popup %}
+        <script>
+            alert("{{ popup }}");
+        </script>
     {% endif %}
     <div class="container">
         <h2>単語や文章を使って文書の検索ができます</h2>

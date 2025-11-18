@@ -26,6 +26,7 @@
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" style="color: white">タグリスト</a>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="{{url_for("main_bp.tag_links")}}" style="color: #101010">タグネットワーク</a></li>
+                                    <li><a class="dropdown-item" href="{{url_for("main_bp.remove_tag")}}" style="color: #101010">タグ削除</a></li>
                                     <li><a class="dropdown-item" href="{{url_for("main_bp.reset")}}" onclick="return confirm('タグリストを初期化しますか？')" style="color: #101010">リスト初期化</a></li>
                                 </ul>
                             </li>

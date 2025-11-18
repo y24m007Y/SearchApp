@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+{% block content %}
+    <form action="/remove_tag" id="tagremover" method="POST">
+        {% for tag in tags %}
+            <input type="checkbox" name="remove_tag" value="{{ tag }}" id="tag-{{ loop.index }}" class="tag">
+            <label for="tag-{{ loop.index }}" class="checkbox-label">{{ tag }}</label>
+        {% endfor %}
+        <button type="submit" form="tagremover">タグリストからタグを削除</button>
+    </form>
+{% endblock %}

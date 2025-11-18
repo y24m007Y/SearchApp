@@ -65,7 +65,7 @@ def tag_explainer(tag):
     res = explainer.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role":"system", "content":"あなたは情報技術に関するスペシャリストです"},
+            {"role":"system", "content":"あなたは情報通信技術の専門家です"},
             {"role":"user", "content":f"次の単語について初心者でも理解できるように100文字程度で簡単に説明してください。{tag}"}
         ]
     )
@@ -106,6 +106,7 @@ def reset_session():
 @bp.route('/search_page', methods=['POST', 'GET'], endpoint='search_page')
 def search_page():
     connect_tagdb()
+    popup = session.pop("popup", None)
     if request.method=="POST":
         query = request.form['query']
         argorithm = request.form['argoritm']
@@ -130,7 +131,6 @@ def search_page():
                 session['template-tags'] = list(top_10_tags)
                 print(top_10_tags)
                 session['taglist'] = session.get('template-tags')
-            else:
             """
             if session.get('add_tags') is not None:
                 tmp = session.get('taglist')
@@ -140,15 +140,15 @@ def search_page():
                     tmp.extend(session.pop('add_tags', None))
                     tmp = list(set(tmp))
                 session['taglist'] = sort_tags(tmp)
-            return render_template('/search_page.html', tags=session.get('taglist'))
+            return render_template('/search_page.html', popup=popup, tags=session.get('taglist'))
 
 @bp.route('/result_page', methods=['POST', 'GET'], endpoint='result_page')
 def result_page():
     connect_tagdb()
     connect_articledb()
-    if request.method=="POST":
-        #print(request.form.getlist('add_tags'))
+    if request.method=="POST":        
         session['add_tags'] = request.form.getlist('add_tags')
+        session['popup'] = "タグリストにタグを追加しました!"
         return redirect(url_for('main_bp.search_page'))
     else:
         query = session.pop('query', None)
@@ -190,6 +190,18 @@ def tag_links():
         return render_template('/tag_links.html', popup=popup, taglist=tagnet_list, nodes=nodes, edges=edges)
     else:
         return  render_template('/tag_links.html', popup=popup, taglist=tagnet_list, nodes=[], edges=[])
+
+@bp.route('/remove_tag', methods=["POST", "GET"], endpoint='remove_tag')
+def remove_tag():
+    if request.method == "POST":
+        target = request.form.getlist('remove_tag')
+        taglist = session.get('taglist')
+        taglist = [tag for tag in taglist if tag not in target]
+        session['taglist'] = taglist
+        popup = f"taglistから{" ".join(target)}を削除しました。"
+        return render_template("/search_page.html", popup=popup, tags=session.get("taglist"))
+    else:
+        return render_template("/remove_tags.html", tags=session.get("taglist"))
     
 @bp.route('/tag_explain', methods=["POST"], endpoint='tag_explain')
 def tag_explain():
@@ -202,6 +214,12 @@ def tag_explain():
 @bp.route('/add_tag', methods=["POST"], endpoint='add_tag')
 def add_tag():
     data = request.form['click_tag']
-    session['taglist'].append(data)
-    session['popup'] = "taglistにタグを追加しました。"
+    tmp = session.get('taglist')
+    print(data, "hello")
+    if tmp is None:
+        tmp = data
+    else:
+        tmp.append(data)
+        tmp = list(set(tmp))
+    session['popup'] = "タグリストにタグを追加しました!"
     return redirect(url_for('main_bp.tag_links'))

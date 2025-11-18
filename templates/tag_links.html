@@ -5,7 +5,9 @@
 {% endblock %}
 {% block content %}
 {% if popup %}
-    <script>alert(popup);</script>
+    <script>
+        alert("{{ popup }}");
+    </script>
 {% endif %}
 <div class="container">
     {% if nodes %}
@@ -27,12 +29,12 @@
     </form>
 </div>
 <div class="container">
-    <p>要約対象のラベル</p>
+    <p>要約対象タグ</p>
     <form action="/add_tag" id="tagadder" method="POST">
         <input type="hidden" name="click_tag" id="hidden_add_tag">
         <p id="explain_tag" class="checkbox-label"></p>
         <p id="explain"></p>
-        <button type="submit" form="tagadder">タグリストにタグを追加</button>
+        <button type="submit" form="tagadder">タグリストに対象タグを追加</button>
     </form>
 </div>
 
