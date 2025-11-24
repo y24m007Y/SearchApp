@@ -104,4 +104,5 @@ Werkzeug
 wheel                    
 xxhash                   
 zipp                     
-zstandard                
+zstandard
+gunicorn                
