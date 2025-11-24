@@ -139,7 +139,7 @@ def search_page():
                 else:
                     tmp.extend(session.pop('add_tags', None))
                     tmp = list(set(tmp))
-                session['taglist'] = sort_tags(tmp)
+                session['taglist'] = tmp
             return render_template('/search_page.html', popup=popup, tags=session.get('taglist'))
 
 @bp.route('/result_page', methods=['POST', 'GET'], endpoint='result_page')
@@ -178,7 +178,6 @@ def tag_links():
     connect_tagdb()
     tag_comb = TagComb.tagcomb()
     tagnet_list = session.get('taglist')
-    tagnet_list = sort_tags([tag for tag in tagnet_list if tag in tag_comb.bool_table.tags.to_list()])
     popup = session.pop('popup', None)
     if request.method=="POST":
         core_tag = request.form['tag']
