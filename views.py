@@ -1,8 +1,7 @@
 from flask import render_template, url_for, request, redirect, session, g, jsonify, Blueprint
 import numpy as np
 import colorsys
-import asyncio
-from openai import AsyncOpenAI, OpenAI
+from openai import OpenAI
 import os, sys
 import re
 from dotenv import load_dotenv
@@ -21,7 +20,6 @@ if api_key is None:
     api_key = os.getenv('OPENAI_KEY')
 
 #概要生成、タグ説明
-text_generator = AsyncOpenAI(api_key=api_key)
 explainer = OpenAI(api_key=api_key)
 
 from flask import Blueprint
@@ -40,8 +38,8 @@ def connect_tagdb():
     if "tagdb" not in g:
         g.tagdb = search_dict.tagDB()
 
-async def text_summarizer(text):
-    res = await text_generator.chat.completions.create(
+def text_summarizer(text):
+    res = explainer.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content":"あなたは情報技術文書の要約専門のアシスタントです"},
@@ -49,16 +47,15 @@ async def text_summarizer(text):
             )
     return res.choices[0].message.content
 
-async def article_summarize(article_ids):
+def article_summarize(article_ids):
     splitters = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         model_name="gpt-4o-mini",
         chunk_size=1500,
         chunk_overlap=50
     )
     bodies = dict(g.articledb.getbody(article_ids, isid=True))
-    split_body_head = [splitters.split_text(bodies[key]) for key in article_ids]
-    tasks = [text_summarizer(text) for text in split_body_head]
-    results = await asyncio.gather(*tasks)
+    split_body_heads = [splitters.split_text(bodies[key]) for key in article_ids]
+    results = [text_summarizer(split_body_head[0]) for split_body_head in split_body_heads]
     return results
 
 def tag_explainer(tag):
@@ -157,9 +154,7 @@ def result_page():
         urls =dict(g.articledb.getURL(article_ids, isid=True))
         tags = g.articledb.getTags(article_ids)
         results = [{"title":titles[article_id],"url":urls[article_id], "tags":tags[article_id]} for article_id in article_ids]
-        #pxys = {tag: taglist.count(tag)/len(results) for tag in taglist} #検索結果上位N件に特定のタグが含まれている記事の出現確率
-        #comb = TagComb.tagcomb()
-        headings = asyncio.run(article_summarize(article_ids=article_ids))
+        headings = article_summarize(article_ids=article_ids)
         headings = [re.sub(r"[#\n\u3000\s\t]+", "", heading) for heading in headings]
         taglist = []
         for i in range(len(article_ids)):
@@ -167,10 +162,6 @@ def result_page():
             taglist.extend(results[i]['tags'])
         taglist = list(set(taglist))
         taglist = sort_tags(taglist)
-        #pxs = comb.Px(taglist)
-        #score = {tag: pxys[tag]*pxs[tag] if tag in pxs.keys() else 0 for tag in taglist} 
-        #score = dict(sorted(score.items(), key=lambda x:x[1], reverse=True)) #特定のタグが付与された記事の出現確率と検索結果上位N件に出現する記事の出現確率のPMI
-        #taglist = list(score.keys())[:5]
         return render_template('/result_page.html', query=query, results=results, taglist=taglist[:10])
 
 @bp.route('/tag_links', methods=["POST", 'GET'], endpoint='tag_links')
@@ -178,8 +169,8 @@ def tag_links():
     connect_tagdb()
     tag_comb = TagComb.tagcomb()
     tagnet_list = session.get('taglist')
-    tagnet_list = tag_comb.check_tag(tagnet_list)
     popup = session.pop('popup', None)
+    tagnet_list = tag_comb.check_tag(tagnet_list)
     if request.method=="POST":
         core_tag = request.form['tag']
         session['core_tag'] = core_tag
