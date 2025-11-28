@@ -178,11 +178,12 @@ def tag_links():
     connect_tagdb()
     tag_comb = TagComb.tagcomb()
     tagnet_list = session.get('taglist')
+    tagnet_list = tag_comb.check_tag(tagnet_list)
     popup = session.pop('popup', None)
     if request.method=="POST":
         core_tag = request.form['tag']
         session['core_tag'] = core_tag
-        tag_network = tag_comb.simulate(core_tag).to_list()
+        tag_network = tag_comb.simulate(core_tag)
         counts = dict(g.tagdb.getCount(tag_network, isname=True))
         nodes = [{'data': {'id': tag, 'color': make_color(counts[tag]), 'count':counts[tag]}} for tag in tag_network]
         edges = [{'data': {'source': core_tag, 'target': tag_network[i], 'width': len(tag_network)-i}} for i in range(len(tag_network)) if tag_network[i] != core_tag]
