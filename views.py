@@ -6,6 +6,9 @@ import os, sys
 import re
 from dotenv import load_dotenv
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+import datetime
+import time
+import inspect
 
 #記事検索モジュールのパスを指定
 sys.path.append("QiitaSearch")
@@ -105,6 +108,7 @@ def search_page():
     connect_tagdb()
     popup = session.pop("popup", None)
     if request.method=="POST":
+        start = time.time()
         query = request.form['query']
         argorithm = request.form['argoritm']
         tags = request.form.getlist('tag')
@@ -120,6 +124,8 @@ def search_page():
         results = engin.search(query, tags)
         session['query'] = query
         session['article_id'] = results
+        with open("webapp_execute_time.log", mode="a") as f:
+            f.write("\n {}  {} POST form execute time: {:.3f}".format(datetime.datetime.now().strftime("%Y:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
         return redirect(url_for('main_bp.result_page'))
     else:
             """
@@ -148,6 +154,7 @@ def result_page():
         session['popup'] = "タグリストにタグを追加しました!"
         return redirect(url_for('main_bp.search_page'))
     else:
+        start = time.time()
         query = session.pop('query', None)
         article_ids = session.pop('article_id', None)
         titles = dict(g.articledb.getTitle(article_ids, isid=True))
@@ -162,6 +169,8 @@ def result_page():
             taglist.extend(results[i]['tags'])
         taglist = list(set(taglist))
         taglist = sort_tags(taglist)
+        with open("webapp_execute_time.log", mode="a") as f:
+            f.write("\n {}  {} GET form execute time: {:.3f}".format(datetime.datetime.now().strftime("%Y:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
         return render_template('/result_page.html', query=query, results=results, taglist=taglist[:10])
 
 @bp.route('/tag_links', methods=["POST", 'GET'], endpoint='tag_links')
