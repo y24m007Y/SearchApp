@@ -9,6 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 import datetime
 import time
 import inspect
+from collections import defaultdict
 
 #記事検索モジュールのパスを指定
 sys.path.append("QiitaSearch")
@@ -22,16 +23,11 @@ api_key = os.getenv("OPENAI_API_KEY")
 if api_key is None:
     api_key = os.getenv('OPENAI_KEY')
 
-#概要生成、タグ説明
+#タグ説明
 explainer = OpenAI(api_key=api_key)
 
 from flask import Blueprint
 bp = Blueprint("main_bp", __name__)
-
-def sort_tags(taglist):
-    tag_counts = dict(g.tagdb.getCount(taglist, isname=True))
-    sort_tags = dict(sorted(tag_counts.items(), key=lambda x: x[1], reverse=True))
-    return list(sort_tags.keys())
 
 def connect_articledb():
     if "articledb" not in g:
@@ -125,7 +121,8 @@ def search_page():
         session['query'] = query
         session['article_id'] = results
         with open("webapp_execute_time.log", mode="a") as f:
-            f.write("\n {}  {} POST form execute time: {:.3f}".format(datetime.datetime.now().strftime("%Y:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
+            f.write("\n {}  {} POST form execute time: {:.3f}".format(datetime.datetime.now().strftime("%H:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
+        session['search_count'] = session.get('search_count', 0) + 1
         return redirect(url_for('main_bp.result_page'))
     else:
             """
@@ -161,17 +158,18 @@ def result_page():
         urls =dict(g.articledb.getURL(article_ids, isid=True))
         tags = g.articledb.getTags(article_ids)
         results = [{"title":titles[article_id],"url":urls[article_id], "tags":tags[article_id]} for article_id in article_ids]
-        headings = article_summarize(article_ids=article_ids)
+        headings = article_summarize(article_ids)
         headings = [re.sub(r"[#\n\u3000\s\t]+", "", heading) for heading in headings]
-        taglist = []
+        result_taglist = defaultdict(int)
         for i in range(len(article_ids)):
             results[i]['heading'] = headings[i]
-            taglist.extend(results[i]['tags'])
-        taglist = list(set(taglist))
-        taglist = sort_tags(taglist)
+            for tag in results[i]['tags']:
+                result_taglist[tag] += 1
+        result_taglist = sorted(result_taglist.items(), key=lambda x: x[1], reverse=True)
+        result_taglist = [key for key, value in result_taglist]
         with open("webapp_execute_time.log", mode="a") as f:
-            f.write("\n {}  {} GET form execute time: {:.3f}".format(datetime.datetime.now().strftime("%Y:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
-        return render_template('/result_page.html', query=query, results=results, taglist=taglist[:10])
+            f.write("\n {}  {} GET form execute time: {:.3f}".format(datetime.datetime.now().strftime("%H:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
+        return render_template('/result_page.html', query=query, results=results, taglist=result_taglist[:10])
 
 @bp.route('/tag_links', methods=["POST", 'GET'], endpoint='tag_links')
 def tag_links():
@@ -223,3 +221,13 @@ def add_tag():
         tmp = list(set(tmp))
     session['popup'] = "タグリストにタグを追加しました!"
     return redirect(url_for('main_bp.tag_links'))
+
+@bp.route('/click_url', methods=["POST"], endpoint='click_url')
+def click_url():
+    data = request.get_json()
+    title = data['title']
+    rank = data['rank']
+    date = data['time']
+    count = session.get('search_count')
+    print(count, title, rank, date)
+    return jsonify({"status":"ok"})

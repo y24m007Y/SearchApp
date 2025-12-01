@@ -6,7 +6,7 @@
     {% if results %}
         <div class="container">
         {% for result in results %}
-                <h3><a href={{result.url}} target="_blank">{{result.title}}</a></h3>
+                <h3><a href="{{result.url}}" onclick="click_url('{{result.title}}', '{{loop.index}}')" target="_blank">{{result.title}}</a></h3>
                 {% for tag in result.tags %}
                 <label class="checkbox-label">
                     {{ tag }}
@@ -33,4 +33,5 @@
         <h2>No result founds</h2>
     {% endif %}
 {% endif %}
+<script src="{{ url_for('static', filename='javascript/form.js')}}"
 {% endblock %}

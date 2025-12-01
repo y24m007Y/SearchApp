@@ -1,18 +1,12 @@
-document.getElementById("adding_tag").addEventListener("submit", async function(e) {
-    e.preventDefault();
 
-    const formdata = new FormData(this);
-    const response = await fetch("/tag_links",{
-        method: "POST",
-        body: formdata
-    });
-
-    if (response.ok)
-    {
-        alert("タグを追加しました。");
-    }
-    else
-    {
-        alert("エラーが発生しました。");
-    }
+function click_url(title,rank){
+    fetch("/click_url", {
+        method : "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({
+        title: title,
+        rank: rank,
+        time: Date.now()
+    })
 });
+}
