@@ -14,7 +14,7 @@ from collections import defaultdict
 #記事検索モジュールのパスを指定
 sys.path.append("QiitaSearch")
 
-from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb
+from QiitaSearch import BM25, VecSearch, RankFusion, search_dict, TagComb, logsys
 
 #環境情報の取得
 load_dotenv()
@@ -36,6 +36,10 @@ def connect_articledb():
 def connect_tagdb():
     if "tagdb" not in g:
         g.tagdb = search_dict.tagDB()
+
+def connect_logdb():
+    if "logdb" not in g:
+        g.logdb = logsys.logDB()
 
 def text_summarizer(text):
     res = explainer.chat.completions.create(
@@ -104,6 +108,7 @@ def search_page():
     connect_tagdb()
     popup = session.pop("popup", None)
     if request.method=="POST":
+        connect_logdb()
         start = time.time()
         query = request.form['query']
         argorithm = request.form['argoritm']
@@ -120,8 +125,7 @@ def search_page():
         results = engin.search(query, tags)
         session['query'] = query
         session['article_id'] = results
-        with open("webapp_execute_time.log", mode="a") as f:
-            f.write("\n {}  {} POST form execute time: {:.3f}".format(datetime.datetime.now().strftime("%H:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
+        g.logdb.search_time_log(date=datetime.datetime.now(), type=engin.__class__.__name__, exectime=time.time()-start)
         session['search_count'] = session.get('search_count', 0) + 1
         return redirect(url_for('main_bp.result_page'))
     else:
@@ -151,6 +155,7 @@ def result_page():
         session['popup'] = "タグリストにタグを追加しました!"
         return redirect(url_for('main_bp.search_page'))
     else:
+        connect_logdb()
         start = time.time()
         query = session.pop('query', None)
         article_ids = session.pop('article_id', None)
@@ -167,8 +172,7 @@ def result_page():
                 result_taglist[tag] += 1
         result_taglist = sorted(result_taglist.items(), key=lambda x: x[1], reverse=True)
         result_taglist = [key for key, value in result_taglist]
-        with open("webapp_execute_time.log", mode="a") as f:
-            f.write("\n {}  {} GET form execute time: {:.3f}".format(datetime.datetime.now().strftime("%H:%M:%S"), inspect.currentframe().f_code.co_name, time.time()-start))
+        g.logdb.result_page_log(date=datetime.datetime.now(), exectime=time.time()-start, query=query, result_id=article_ids)
         return render_template('/result_page.html', query=query, results=results, taglist=result_taglist[:10])
 
 @bp.route('/tag_links', methods=["POST", 'GET'], endpoint='tag_links')
@@ -224,10 +228,19 @@ def add_tag():
 
 @bp.route('/click_url', methods=["POST"], endpoint='click_url')
 def click_url():
+    connect_logdb()
     data = request.get_json()
+    id = session.get('user_id')
     title = data['title']
     rank = data['rank']
-    date = data['time']
+    date = datetime.datetime.now()
+    query = data['query']
+    tags = session.get('taglist')
     count = session.get('search_count')
-    print(count, title, rank, date)
+    g.logdb.click_url_log(user_id=id, search_query=query, tags=tags, date=date, rank=rank, title=title, search_count=count)
     return jsonify({"status":"ok"})
+
+@bp.route('/start_page', methods=["POST"], endpoint='start_page')
+def start_page():
+    session['user_id'] = request.form['id']
+    return render_template('/search_page.html', popup=None, tags=None)
