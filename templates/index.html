@@ -2,9 +2,26 @@
 {% block content %}
     <a href="{{url_for('main_bp.search_page')}}">検索画面に移動する</a>
     <h3>このwebアプリは、Qiitaの記事を自由文で検索することができます。</h3>
-    <h4>検索の対象期間は、2024年1月に投稿された記事です。</h4><br>
+    <h4>対象の記事は2024年1月にQiitaに投稿された記事です。</h4>
     <br>
-
-    <p>また、本システムの評価のために作成したGoogle Formアンケートを開いた状態で本システムを実行してください。</p>
+    <p>また、本システムの評価のために下記のGoogle Formアンケートを開いた状態で本システムを実行してください。</p>
     <a href="https://forms.gle/WE2s7rBPqTqG4nQP6">google formのリンク先</a>
+
+    <form action="start_page" method="POST">
+        <button type="submit">送信</button>
+        <input name="id">
+    </form>
+
+    <p>評価実験の流れ</p>
+
+    <ol>
+        <li>Google Formの事前アンケートを回答</li>
+        <li>上記の入力欄に学籍番号を入力して送信</li>
+        <li>実験に利用するシステム・実験の手順の説明</li>
+        <li>実験1</li>
+        <li>次の実験に利用するシステム・実験の手順の説明</li>
+        <li>実験2</li>
+        <li>事後アンケートの回答</li>
+    </ol>
+
 {% endblock %}
