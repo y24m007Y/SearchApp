@@ -125,8 +125,9 @@ def search_page():
         results = engin.search(query, tags)
         session['query'] = query
         session['article_id'] = results
-        g.logdb.search_time_log(date=datetime.datetime.now(), type=engin.__class__.__name__, exectime=time.time()-start)
+        session['query_tags'] = tags
         session['search_count'] = session.get('search_count', 0) + 1
+        g.logdb.search_time_log(date=datetime.datetime.now(), type=engin.__class__.__name__, exectime=time.time()-start)
         return redirect(url_for('main_bp.result_page'))
     else:
             """
@@ -235,7 +236,7 @@ def click_url():
     rank = data['rank']
     date = datetime.datetime.now()
     query = data['query']
-    tags = session.get('taglist')
+    tags = session.get('query_tags')
     count = session.get('search_count')
     g.logdb.click_url_log(user_id=id, search_query=query, tags=tags, date=date, rank=rank, title=title, search_count=count)
     return jsonify({"status":"ok"})
