@@ -173,7 +173,7 @@ def result_page():
                 result_taglist[tag] += 1
         result_taglist = sorted(result_taglist.items(), key=lambda x: x[1], reverse=True)
         result_taglist = [key for key, value in result_taglist]
-        g.logdb.result_page_log(date=datetime.datetime.now(), exectime=time.time()-start, query=query, result_id=article_ids)
+        g.logdb.result_page_log(date=datetime.datetime.now(), exectime=time.time()-start, search_query=query, result_id=article_ids)
         return render_template('/result_page.html', query=query, results=results, taglist=result_taglist[:10])
 
 @bp.route('/tag_links', methods=["POST", 'GET'], endpoint='tag_links')
